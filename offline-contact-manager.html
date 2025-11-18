@@ -1,0 +1,1494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact Manager</title>
+    <link rel="icon" id="favicon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E📪%3C/text%3E%3C/svg%3E">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #ababab;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background: #ababab;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .notification-banner {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #51cf66;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            font-weight: 600;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            animation: fadeIn 0.2s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .modal {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .modal-title {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #212529;
+        }
+
+        .modal-message {
+            font-size: 1.1em;
+            color: #495057;
+            margin-bottom: 25px;
+            line-height: 1.5;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 1em;
+            margin-bottom: 20px;
+            font-family: inherit;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .modal-input:disabled {
+            background: #e9ecef;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        .modal-checkbox {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            gap: 10px;
+        }
+
+        .modal-checkbox input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
+        .modal-checkbox label {
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            color: #212529;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .btn-warning {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-warning:hover {
+            background: #e0a800;
+            transform: translateY(-2px);
+        }
+
+        .toolbar {
+            padding: 20px 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn:disabled:hover {
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-success {
+            background: #51cf66;
+            color: white;
+        }
+
+        .btn-success:hover:not(:disabled) {
+            background: #40c057;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(81, 207, 102, 0.4);
+        }
+
+        .btn-secondary {
+            background: #868e96;
+            color: white;
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            background: #6c757d;
+            transform: translateY(-2px);
+        }
+
+        .btn-danger {
+            background: #ff6b6b;
+            color: white;
+        }
+
+        .btn-danger:hover:not(:disabled) {
+            background: #fa5252;
+            transform: translateY(-2px);
+        }
+
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.9em;
+        }
+
+        .contact-count {
+            margin-left: auto;
+            font-weight: 600;
+            color: #495057;
+            font-size: 1.1em;
+        }
+
+        .content {
+            padding: 30px;
+            flex: 1;
+        }
+
+        .contact-form {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 2px solid #e9ecef;
+        }
+
+        .form-title {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #495057;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group label {
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            padding: 10px;
+            border: 2px solid #dee2e6;
+            border-radius: 6px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .custom-field {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .custom-field input {
+            flex: 1;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+
+        .custom-fields-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #dee2e6;
+        }
+
+        .custom-fields-title {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+            color: #495057;
+            font-weight: 600;
+        }
+
+        .contacts-list {
+            margin-top: 30px;
+        }
+
+        .contacts-title {
+            font-size: 1.4em;
+            margin-bottom: 20px;
+            color: #495057;
+        }
+
+        .contact-card {
+            background: #f8f9fa;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .contact-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+        }
+
+        .contact-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .contact-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #212529;
+        }
+
+        .contact-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .contact-details {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            color: #495057;
+        }
+
+        .contact-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .contact-label {
+            font-size: 0.85em;
+            font-weight: 600;
+            color: #868e96;
+            margin-bottom: 3px;
+        }
+
+        .contact-value {
+            font-size: 1em;
+            color: #212529;
+            word-break: break-word;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #868e96;
+        }
+
+        .empty-state-icon {
+            font-size: 4em;
+            margin-bottom: 20px;
+        }
+
+        .empty-state-text {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+        }
+
+        .warning-banner {
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-radius: 8px;
+            padding: 15px 20px;
+            margin-bottom: 20px;
+            color: #856404;
+        }
+
+        .warning-banner strong {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .footer {
+            background: #343a40;
+            color: white;
+            padding: 30px;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .footer p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Print Styles */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+                max-width: 100%;
+            }
+
+            .header,
+            .toolbar,
+            .warning-banner,
+            .footer,
+            .contact-form,
+            .contacts-title,
+            .contact-actions,
+            .btn,
+            .notification-banner,
+            .modal-overlay {
+                display: none !important;
+            }
+
+            .content {
+                padding: 0;
+            }
+
+            .contacts-list {
+                margin: 0;
+            }
+
+            .contact-card {
+                background: white;
+                border: 1px solid #000;
+                border-radius: 0;
+                padding: 15px;
+                margin-bottom: 0;
+                page-break-inside: avoid;
+                break-inside: avoid;
+                column-count: 1;
+            }
+
+            .contact-header {
+                margin-bottom: 10px;
+            }
+
+            .contact-name {
+                font-size: 1em;
+                color: #000;
+            }
+
+            .contact-details {
+                display: block;
+            }
+
+            .contact-field {
+                margin-bottom: 8px;
+            }
+
+            .contact-label {
+                font-weight: bold;
+                color: #000;
+                font-size: 1em;
+                display: inline;
+                margin-bottom: 0;
+            }
+
+            .contact-value {
+                font-size: 1em;
+                color: #000;
+                display: inline;
+                margin-left: 5px;
+            }
+
+            .contact-label::after {
+                content: ":";
+            }
+
+            #contactsList {
+                column-count: 1;
+                column-gap: 0;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.8em;
+            }
+
+            .toolbar {
+                padding: 15px;
+            }
+
+            .content {
+                padding: 20px;
+            }
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .contact-details {
+                grid-template-columns: 1fr;
+            }
+
+            .notification-banner {
+                right: 10px;
+                left: 10px;
+            }
+
+            .modal {
+                width: 95%;
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Contact Manager</h1>
+            <p>Version 1.0 | Stable</p>
+        </div>
+
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="app.showAddForm()">Add Contact</button>
+            <button class="btn btn-success" onclick="app.importCSV()">Import CSV</button>
+            <button class="btn btn-secondary" id="exportBtn" onclick="app.showExportDialog()">Export CSV</button>
+            <button class="btn btn-secondary" id="printBtn" onclick="app.printContacts()">Print</button>
+            <button class="btn btn-secondary" id="pdfBtn" onclick="return false;" disabled>No Function</button>
+            <button class="btn btn-danger" id="clearBtn" onclick="app.clearAll()">Clear All</button>
+            <span class="contact-count" id="contactCount">0 contacts</span>
+        </div>
+
+        <div class="content">
+            <div class="warning-banner">
+                <strong>⚠️ Important:</strong>
+                All data is stored in memory only and will be lost when you close or refresh this page. Always export your contacts to CSV to save them.
+            </div>
+
+            <div class="contact-form" id="contactForm" style="display: none;">
+                <h2 class="form-title" id="formTitle">Add New Contact</h2>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="firstName">First Name</label>
+                        <input type="text" id="firstName" placeholder="First">
+                    </div>
+                    <div class="form-group">
+                        <label for="lastName">Last Name</label>
+                        <input type="text" id="lastName" placeholder="Last">
+                    </div>
+                    <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" placeholder="email@example.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="phone">Phone</label>
+                        <input type="tel" id="phone" placeholder="Phone Number">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="notes">Notes</label>
+                    <textarea id="notes" placeholder="Additional information about this contact"></textarea>
+                </div>
+
+                <div class="custom-fields-section">
+                    <h3 class="custom-fields-title">Custom Fields</h3>
+                    <div id="customFieldsContainer"></div>
+                    <button class="btn btn-secondary btn-small" onclick="app.addCustomField()" style="margin-top: 10px;">Add Custom Field</button>
+                </div>
+
+                <div class="form-actions">
+                    <button class="btn btn-primary" onclick="app.saveContact()">Save Contact</button>
+                    <button class="btn btn-secondary" onclick="app.cancelForm()">Cancel</button>
+                </div>
+            </div>
+
+            <div class="contacts-list">
+                <h2 class="contacts-title">Your Contacts</h2>
+                <div id="contactsList"></div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p><strong>Contact Manager</strong> - A simple contact management solution</p>
+            <p>This application runs entirely in your browser with no internet connection required</p>
+            <p>&copy; 2025 All rights reserved</p>
+        </div>
+    </div>
+
+    <input type="file" id="csvFileInput" accept=".csv" onchange="app.handleCSVImport(event)">
+
+    <script>
+        const app = {
+            contacts: [],
+            editingIndex: null,
+            customFieldCounter: 0,
+            isImported: false,
+
+            init() {
+                this.renderContacts();
+                this.updateFavicon();
+                this.updateButtons();
+            },
+
+            updateButtons() {
+                const exportBtn = document.getElementById('exportBtn');
+                const clearBtn = document.getElementById('clearBtn');
+                const printBtn = document.getElementById('printBtn');
+                const pdfBtn = document.getElementById('pdfBtn');
+                
+                const hasContacts = this.contacts.length > 0;
+                exportBtn.disabled = !hasContacts;
+                clearBtn.disabled = !hasContacts;
+                printBtn.disabled = !hasContacts;
+                pdfBtn.disabled = !hasContacts;
+            },
+
+            updateFavicon() {
+                const favicon = document.getElementById('favicon');
+                let emoji = '📪';
+                
+                if (this.isImported) {
+                    emoji = '📤';
+                } else if (this.contacts.length > 0) {
+                    emoji = '📫';
+                }
+
+                favicon.href = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='0.9em' font-size='90'%3E${emoji}%3C/text%3E%3C/svg%3E`;
+            },
+
+            showNotification(message) {
+                const existing = document.querySelector('.notification-banner');
+                if (existing) {
+                    existing.remove();
+                }
+
+                const banner = document.createElement('div');
+                banner.className = 'notification-banner';
+                banner.textContent = message;
+                document.body.appendChild(banner);
+
+                setTimeout(() => {
+                    banner.remove();
+                }, 4000);
+            },
+
+            showAlert(title, message) {
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.innerHTML = `
+                    <div class="modal">
+                        <h2 class="modal-title">${title}</h2>
+                        <p class="modal-message">${message}</p>
+                        <div class="modal-actions">
+                            <button class="btn btn-warning" onclick="this.closest('.modal-overlay').remove()">Ok</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) {
+                        overlay.remove();
+                    }
+                };
+            },
+
+            showConfirm(title, message, onConfirm, onCancel = null) {
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.innerHTML = `
+                    <div class="modal">
+                        <h2 class="modal-title">${title}</h2>
+                        <p class="modal-message">${message}</p>
+                        <div class="modal-actions">
+                            <button class="btn btn-secondary" id="cancelBtn">Cancel</button>
+                            <button class="btn btn-danger" id="confirmBtn">Confirm</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                document.getElementById('confirmBtn').onclick = () => {
+                    overlay.remove();
+                    onConfirm();
+                };
+
+                document.getElementById('cancelBtn').onclick = () => {
+                    overlay.remove();
+                    if (onCancel) onCancel();
+                };
+
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) {
+                        overlay.remove();
+                        if (onCancel) onCancel();
+                    }
+                };
+            },
+
+            showImportChoice(contacts, onReplace, onAppend) {
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.innerHTML = `
+                    <div class="modal">
+                        <h2 class="modal-title">Import Options</h2>
+                        <p class="modal-message">You have ${this.contacts.length} existing contact(s) and are importing ${contacts.length} contact(s). How would you like to proceed?</p>
+                        <div class="modal-actions">
+                            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                            <button class="btn btn-success" id="appendBtn">Add to Current</button>
+                            <button class="btn btn-danger" id="replaceBtn">Replace All</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                document.getElementById('replaceBtn').onclick = () => {
+                    overlay.remove();
+                    onReplace();
+                };
+
+                document.getElementById('appendBtn').onclick = () => {
+                    overlay.remove();
+                    onAppend();
+                };
+
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) {
+                        overlay.remove();
+                    }
+                };
+            },
+
+            showPasswordPrompt(title, message, onSubmit) {
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.innerHTML = `
+                    <div class="modal">
+                        <h2 class="modal-title">${title}</h2>
+                        <p class="modal-message">${message}</p>
+                        <input type="password" class="modal-input" id="passwordInput" placeholder="Enter password">
+                        <div class="modal-actions">
+                            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                            <button class="btn btn-primary" id="submitBtn">Submit</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                const passwordInput = document.getElementById('passwordInput');
+                const submitBtn = document.getElementById('submitBtn');
+
+                const handleSubmit = () => {
+                    const password = passwordInput.value;
+                    if (!password) {
+                        this.showAlert('Empty Password', 'Password cannot be empty');
+                        return;
+                    }
+
+                    overlay.remove();
+                    onSubmit(password);
+                };
+
+                submitBtn.onclick = handleSubmit;
+                passwordInput.onkeypress = (e) => {
+                    if (e.key === 'Enter') handleSubmit();
+                };
+
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) {
+                        overlay.remove();
+                    }
+                };
+
+                passwordInput.focus();
+            },
+
+            showExportDialog() {
+                if (this.contacts.length === 0) {
+                    return;
+                }
+
+                const now = new Date();
+                const year = now.getUTCFullYear();
+                const month = String(now.getUTCMonth() + 1).padStart(2, '0');
+                const day = String(now.getUTCDate()).padStart(2, '0');
+                const hours = String(now.getUTCHours()).padStart(2, '0');
+                const minutes = String(now.getUTCMinutes()).padStart(2, '0');
+                const defaultFilename = `contacts_${year}_${month}_${day}_${hours}_${minutes}`;
+
+                const overlay = document.createElement('div');
+                overlay.className = 'modal-overlay';
+                overlay.innerHTML = `
+                    <div class="modal">
+                        <h2 class="modal-title">Export Contacts</h2>
+                        <div class="form-group" style="margin-bottom: 20px;">
+                            <label for="exportFilename">Filename</label>
+                            <input type="text" class="modal-input" id="exportFilename" value="${defaultFilename}" style="margin-bottom: 0;">
+                        </div>
+                        <div class="modal-checkbox">
+                            <input type="checkbox" id="encryptCheckbox" checked>
+                            <label for="encryptCheckbox">Encrypt with password</label>
+                        </div>
+                        <input type="password" class="modal-input" id="exportPassword" placeholder="Enter password">
+                        <input type="password" class="modal-input" id="exportPasswordConfirm" placeholder="Confirm password">
+                        <div class="modal-actions">
+                            <button class="btn btn-secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                            <button class="btn btn-primary" id="exportConfirmBtn">Export</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                const checkbox = document.getElementById('encryptCheckbox');
+                const passwordInput = document.getElementById('exportPassword');
+                const confirmInput = document.getElementById('exportPasswordConfirm');
+                const filenameInput = document.getElementById('exportFilename');
+
+                checkbox.onchange = () => {
+                    passwordInput.disabled = !checkbox.checked;
+                    confirmInput.disabled = !checkbox.checked;
+                };
+
+                document.getElementById('exportConfirmBtn').onclick = async () => {
+                    const filename = filenameInput.value.trim();
+                    if (!filename) {
+                        this.showAlert('Invalid Filename', 'Filename cannot be empty');
+                        return;
+                    }
+
+                    if (checkbox.checked) {
+                        const password = passwordInput.value;
+                        const confirm = confirmInput.value;
+
+                        if (!password) {
+                            this.showAlert('Empty Password', 'Password cannot be empty');
+                            return;
+                        }
+
+                        if (password !== confirm) {
+                            this.showAlert('Password Mismatch', 'Passwords do not match');
+                            return;
+                        }
+
+                        overlay.remove();
+                        await this.exportCSV(filename, password);
+                    } else {
+                        overlay.remove();
+                        await this.exportCSV(filename, null);
+                    }
+                };
+
+                overlay.onclick = (e) => {
+                    if (e.target === overlay) {
+                        overlay.remove();
+                    }
+                };
+            },
+
+            printContacts() {
+                if (this.contacts.length === 0) {
+                    return;
+                }
+                window.print();
+            },
+
+            PDF() {
+                if (this.contacts.length === 0) {
+                    return;
+                }
+                window.print();
+            },
+
+            async encrypt(text, password) {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(text);
+                const passwordKey = encoder.encode(password);
+                
+                const key = await crypto.subtle.importKey(
+                    'raw',
+                    await crypto.subtle.digest('SHA-256', passwordKey),
+                    { name: 'AES-GCM' },
+                    false,
+                    ['encrypt']
+                );
+
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const encrypted = await crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    data
+                );
+
+                const combined = new Uint8Array(iv.length + encrypted.byteLength);
+                combined.set(iv);
+                combined.set(new Uint8Array(encrypted), iv.length);
+
+                return btoa(String.fromCharCode(...combined));
+            },
+
+            async decrypt(encryptedText, password) {
+                try {
+                    const encoder = new TextEncoder();
+                    const passwordKey = encoder.encode(password);
+                    
+                    const key = await crypto.subtle.importKey(
+                        'raw',
+                        await crypto.subtle.digest('SHA-256', passwordKey),
+                        { name: 'AES-GCM' },
+                        false,
+                        ['decrypt']
+                    );
+
+                    const combined = Uint8Array.from(atob(encryptedText), c => c.charCodeAt(0));
+                    const iv = combined.slice(0, 12);
+                    const encrypted = combined.slice(12);
+
+                    const decrypted = await crypto.subtle.decrypt(
+                        { name: 'AES-GCM', iv: iv },
+                        key,
+                        encrypted
+                    );
+
+                    return new TextDecoder().decode(decrypted);
+                } catch (e) {
+                    throw new Error('Incorrect password or corrupted file');
+                }
+            },
+
+            isBase64(str) {
+                try {
+                    return btoa(atob(str)) === str;
+                } catch (e) {
+                    return false;
+                }
+            },
+
+            isCMFormat(csv) {
+                const lines = csv.split('\n').map(line => line.trim()).filter(line => line);
+                if (lines.length === 0) return false;
+
+                for (let line of lines) {
+                    if (line.toLowerCase().includes('exported on:')) {
+                        return true;
+                    }
+                }
+
+                const headers = this.parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+                const cmFields = ['first', 'last', 'email', 'phone', 'notes'];
+                const matchCount = cmFields.filter(field => headers.includes(field)).length;
+                
+                return matchCount >= 3;
+            },
+
+            showAddForm() {
+                document.getElementById('contactForm').style.display = 'block';
+                document.getElementById('formTitle').textContent = 'Add New Contact';
+                this.editingIndex = null;
+                this.clearFormFields();
+                document.getElementById('firstName').focus();
+            },
+
+            cancelForm() {
+                document.getElementById('contactForm').style.display = 'none';
+                this.editingIndex = null;
+                this.clearFormFields();
+            },
+
+            clearFormFields() {
+                document.getElementById('firstName').value = '';
+                document.getElementById('lastName').value = '';
+                document.getElementById('email').value = '';
+                document.getElementById('phone').value = '';
+                document.getElementById('notes').value = '';
+                document.getElementById('customFieldsContainer').innerHTML = '';
+                this.customFieldCounter = 0;
+            },
+
+            addCustomField(fieldName = '', fieldValue = '') {
+                const container = document.getElementById('customFieldsContainer');
+                const fieldId = `customField_${this.customFieldCounter++}`;
+                
+                const fieldDiv = document.createElement('div');
+                fieldDiv.className = 'custom-field';
+                fieldDiv.id = fieldId;
+                fieldDiv.innerHTML = `
+                    <div class="form-group" style="flex: 1;">
+                        <label>Field Name</label>
+                        <input type="text" class="custom-field-name" placeholder="Name" value="${this.escapeHtml(fieldName)}">
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label>Field Value</label>
+                        <input type="text" class="custom-field-value" placeholder="Value" value="${this.escapeHtml(fieldValue)}">
+                    </div>
+                    <button class="btn btn-danger btn-small" onclick="app.removeCustomField('${fieldId}')" style="margin-bottom: 0;">✖</button>
+                `;
+                container.appendChild(fieldDiv);
+            },
+
+            removeCustomField(fieldId) {
+                document.getElementById(fieldId).remove();
+            },
+
+            saveContact() {
+                const contact = {
+                    first: document.getElementById('firstName').value.trim(),
+                    last: document.getElementById('lastName').value.trim(),
+                    email: document.getElementById('email').value.trim(),
+                    phone: document.getElementById('phone').value.trim(),
+                    notes: document.getElementById('notes').value.trim()
+                };
+
+                const customFields = document.querySelectorAll('.custom-field');
+                customFields.forEach(field => {
+                    const name = field.querySelector('.custom-field-name').value.trim();
+                    const value = field.querySelector('.custom-field-value').value.trim();
+                    if (name) {
+                        contact[name] = value;
+                    }
+                });
+
+                if (!contact.first && !contact.last && !contact.email && !contact.phone && Object.keys(contact).length <= 5) {
+                    this.showAlert('Empty Contact', 'Please fill in at least one field.');
+                    return;
+                }
+
+                if (this.editingIndex !== null) {
+                    this.contacts[this.editingIndex] = contact;
+                    this.showNotification('Contact updated successfully!');
+                    this.editingIndex = null;
+                } else {
+                    this.contacts.push(contact);
+                    this.showNotification('New contact created successfully!');
+                }
+
+                this.cancelForm();
+                this.renderContacts();
+                this.updateFavicon();
+                this.updateButtons();
+            },
+
+            editContact(index) {
+                const contact = this.contacts[index];
+                document.getElementById('firstName').value = contact.first || '';
+                document.getElementById('lastName').value = contact.last || '';
+                document.getElementById('email').value = contact.email || '';
+                document.getElementById('phone').value = contact.phone || '';
+                document.getElementById('notes').value = contact.notes || '';
+
+                document.getElementById('customFieldsContainer').innerHTML = '';
+                this.customFieldCounter = 0;
+
+                const standardFields = ['first', 'last', 'email', 'phone', 'notes'];
+                for (const [key, value] of Object.entries(contact)) {
+                    if (!standardFields.includes(key)) {
+                        this.addCustomField(key, value);
+                    }
+                }
+
+                document.getElementById('formTitle').textContent = 'Edit Contact';
+                document.getElementById('contactForm').style.display = 'block';
+                this.editingIndex = index;
+                document.getElementById('firstName').focus();
+            },
+
+            deleteContact(index) {
+                const contact = this.contacts[index];
+                const name = contact.first || contact.last || contact.email || 'this contact';
+                this.showConfirm(
+                    'Delete Contact',
+                    `Are you sure you want to delete ${name}?`,
+                    () => {
+                        this.contacts.splice(index, 1);
+                        this.renderContacts();
+                        this.updateFavicon();
+                        this.updateButtons();
+                        this.showNotification('Contact deleted successfully!');
+                    }
+                );
+            },
+
+            clearAll() {
+                if (this.contacts.length === 0) {
+                    return;
+                }
+                this.showConfirm(
+                    'Clear All Contacts',
+                    `Are you sure you want to delete all ${this.contacts.length} contact(s)? This action cannot be undone.`,
+                    () => {
+                        this.contacts = [];
+                        this.isImported = false;
+                        this.renderContacts();
+                        this.updateFavicon();
+                        this.updateButtons();
+                        this.cancelForm();
+                        this.showNotification('🗑️ All contacts cleared!');
+                    }
+                );
+            },
+
+            renderContacts() {
+                const container = document.getElementById('contactsList');
+                const countEl = document.getElementById('contactCount');
+                
+                countEl.textContent = `${this.contacts.length} contact${this.contacts.length !== 1 ? 's' : ''}`;
+
+                if (this.contacts.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-state-icon">📭</div>
+                            <div class="empty-state-text">No contacts yet</div>
+                            <p>Click "Add Contact" to create your first contact or import from CSV.</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = this.contacts.map((contact, index) => {
+                    const displayName = [contact.first, contact.last].filter(Boolean).join(' ') || 'No Name';
+                    const standardFields = ['first', 'last', 'email', 'phone', 'notes'];
+                    
+                    let fieldsHTML = '';
+                    
+                    if (contact.first || contact.last) {
+                        fieldsHTML += `
+                            <div class="contact-field">
+                                <div class="contact-label">Name</div>
+                                <div class="contact-value">${this.escapeHtml(displayName)}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    if (contact.email) {
+                        fieldsHTML += `
+                            <div class="contact-field">
+                                <div class="contact-label">Email</div>
+                                <div class="contact-value">${this.escapeHtml(contact.email)}</div>
+                            </div>
+                        `;
+                    }
+                    
+                    if (contact.phone) {
+                        fieldsHTML += `
+                            <div class="contact-field">
+                                <div class="contact-label">Phone</div>
+                                <div class="contact-value">${this.escapeHtml(contact.phone)}</div>
+                            </div>
+                        `;
+                    }
+
+                    for (const [key, value] of Object.entries(contact)) {
+                        if (!standardFields.includes(key) && value) {
+                            fieldsHTML += `
+                                <div class="contact-field">
+                                    <div class="contact-label">${this.escapeHtml(key)}</div>
+                                    <div class="contact-value">${this.escapeHtml(value)}</div>
+                                </div>
+                            `;
+                        }
+                    }
+                    
+                    if (contact.notes) {
+                        fieldsHTML += `
+                            <div class="contact-field" style="grid-column: 1 / -1;">
+                                <div class="contact-label">Notes</div>
+                                <div class="contact-value">${this.escapeHtml(contact.notes)}</div>
+                            </div>
+                        `;
+                    }
+
+                    return `
+                        <div class="contact-card">
+                            <div class="contact-header">
+                                <div class="contact-name">${this.escapeHtml(displayName)}</div>
+                                <div class="contact-actions">
+                                    <button class="btn btn-primary btn-small" onclick="app.editContact(${index})"> Edit</button>
+                                    <button class="btn btn-danger btn-small" onclick="app.deleteContact(${index})">Delete</button>
+                                </div>
+                            </div>
+                            <div class="contact-details">
+                                ${fieldsHTML}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            },
+
+            importCSV() {
+                document.getElementById('csvFileInput').click();
+            },
+
+            handleCSVImport(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    const content = e.target.result;
+                    
+                    if (this.isBase64(content)) {
+                        this.showPasswordPrompt(
+                            'Enter Password',
+                            'This file is encrypted. Please enter the password:',
+                            async (password) => {
+                                try {
+                                    const decrypted = await this.decrypt(content, password);
+                                    const contacts = this.parseCSV(decrypted);
+                                    
+                                    if (contacts.length === 0) {
+                                        this.showAlert('Import Error', 'No valid contacts found in CSV file.');
+                                        return;
+                                    }
+
+                                    this.handleImportedContacts(contacts);
+                                } catch (error) {
+                                    this.showAlert('Incorrect Password', error.message);
+                                }
+                            }
+                        );
+                    } else {
+                        try {
+                            const contacts = this.parseCSV(content);
+                            
+                            if (contacts.length === 0) {
+                                this.showAlert('Import Error', 'No valid contacts found in CSV file.');
+                                return;
+                            }
+
+                            if (this.isCMFormat(content)) {
+                                this.handleImportedContacts(contacts);
+                            } else {
+                                this.showAlert(
+                                    'Foreign CSV Format',
+                                    'This file is not in Contact Manager format. Some information may not be imported correctly.'
+                                );
+                                setTimeout(() => {
+                                    this.handleImportedContacts(contacts);
+                                }, 100);
+                            }
+                        } catch (error) {
+                            this.showAlert('Import Error', 'Failed to parse CSV file: ' + error.message);
+                        }
+                    }
+
+                    event.target.value = '';
+                };
+                reader.readAsText(file);
+            },
+
+            handleImportedContacts(contacts) {
+                if (this.contacts.length === 0) {
+                    this.contacts = contacts;
+                    this.isImported = true;
+                    this.renderContacts();
+                    this.updateFavicon();
+                    this.updateButtons();
+                    this.showNotification(`Successfully imported ${contacts.length} contact(s)!`);
+                } else {
+                    this.showImportChoice(
+                        contacts,
+                        () => {
+                            this.contacts = contacts;
+                            this.isImported = true;
+                            this.renderContacts();
+                            this.updateFavicon();
+                            this.updateButtons();
+                            this.showNotification(`Successfully replaced with ${contacts.length} contact(s)!`);
+                        },
+                        () => {
+                            this.contacts = [...this.contacts, ...contacts];
+                            this.isImported = false;
+                            this.renderContacts();
+                            this.updateFavicon();
+                            this.updateButtons();
+                            this.showNotification(`Successfully added ${contacts.length} contact(s)!`);
+                        }
+                    );
+                }
+            },
+
+            parseCSV(csv) {
+                const lines = csv.split('\n').map(line => line.trim()).filter(line => line);
+                if (lines.length === 0) return [];
+
+                const headers = this.parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+                const contacts = [];
+
+                for (let i = 1; i < lines.length; i++) {
+                    const line = lines[i];
+                    
+                    if (line.toLowerCase().includes('exported on:')) {
+                        continue;
+                    }
+
+                    const values = this.parseCSVLine(line);
+                    const contact = {};
+
+                    headers.forEach((header, index) => {
+                        if (values[index] !== undefined && values[index] !== '') {
+                            contact[header] = values[index];
+                        }
+                    });
+
+                    if (Object.keys(contact).length > 0) {
+                        contacts.push(contact);
+                    }
+                }
+
+                return contacts;
+            },
+
+            parseCSVLine(line) {
+                const values = [];
+                let current = '';
+                let inQuotes = false;
+
+                for (let i = 0; i < line.length; i++) {
+                    const char = line[i];
+                    const nextChar = line[i + 1];
+
+                    if (char === '"') {
+                        if (inQuotes && nextChar === '"') {
+                            current += '"';
+                            i++;
+                        } else {
+                            inQuotes = !inQuotes;
+                        }
+                    } else if (char === ',' && !inQuotes) {
+                        values.push(current.trim());
+                        current = '';
+                    } else {
+                        current += char;
+                    }
+                }
+                values.push(current.trim());
+
+                return values;
+            },
+
+            async exportCSV(filename, password) {
+                if (this.contacts.length === 0) {
+                    return;
+                }
+
+                const allFields = new Set(['first', 'last', 'email', 'phone', 'notes']);
+                this.contacts.forEach(contact => {
+                    Object.keys(contact).forEach(key => allFields.add(key));
+                });
+
+                const headers = Array.from(allFields);
+                const csvLines = [headers.join(',')];
+
+                for (const contact of this.contacts) {
+                    const row = headers.map(field => {
+                        const value = contact[field] || '';
+                        if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                            return '"' + value.replace(/"/g, '""') + '"';
+                        }
+                        return value;
+                    });
+                    csvLines.push(row.join(','));
+                }
+
+                const now = new Date();
+                const timestamp = now.toISOString().replace('T', ' ').substring(0, 19);
+                csvLines.push('');
+                csvLines.push(`"Exported on: ${timestamp}"`);
+
+                const csvContent = csvLines.join('\n');
+                
+                try {
+                    let finalContent = csvContent;
+                    
+                    if (password) {
+                        finalContent = await this.encrypt(csvContent, password);
+                    }
+
+                    const blob = new Blob([finalContent], { type: 'text/csv;charset=utf-8;' });
+                    const link = document.createElement('a');
+                    const url = URL.createObjectURL(blob);
+                    
+                    link.setAttribute('href', url);
+                    link.setAttribute('download', `${filename}.csv`);
+                    link.style.visibility = 'hidden';
+                    
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+
+                    this.showNotification('Contacts exported successfully!');
+                } catch (error) {
+                    this.showAlert('Export Error', 'Failed to export contacts: ' + error.message);
+                }
+            },
+
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        };
+
+        window.addEventListener('DOMContentLoaded', () => {
+            app.init();
+        });
+
+        window.addEventListener('beforeunload', (event) => {
+            if (app.contacts.length > 0) {
+                event.preventDefault();
+                event.returnValue = 'You have unsaved contacts. Are you sure you want to leave?';
+            }
+        });
+    </script>
+</body>
+</html>
